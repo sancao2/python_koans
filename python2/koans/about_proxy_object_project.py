@@ -22,15 +22,47 @@ from runner.koan import *
 class Proxy(object):
     def __init__(self, target_object):
         # WRITE CODE HERE
-
-        #initialize '_obj' attribute last. Trust me on this!
-        self._obj = target_object
+        # self.__dict__ = target_object.__dict__
+        # self.__class__ = target_object.__class__
+        # for x in dir(target_object):
+        #     if target_object.__getattribute__(x):
+        #         self.__setattr__(x, target_object.__getattribute__(x))
+        # print dir(target_object)
+        # print dir(self)
+        self._messages = []
+        # initialize '_obj' attribute last. Trust me on this!
+        #self._obj = target_object
+        object.__setattr__(self, "_obj", target_object)
 
     # WRITE CODE HERE
+    # should not use self.__getattribute__ because it were recursive forever.
+    def __getattribute__(self, name):
+        if name == "_obj":
+            return object.__getattribute__(self, "_obj")
+        elif name == "_messages":
+            return object.__getattribute__(self, "_messages")
+        elif name == "messages":
+            return lambda: self._messages
+        elif name == "was_called":
+            # import re
+            # return lambda(args): re.search(args, str(self._messages)) != None
+            return lambda(args): len([x for x in self._messages if x == args]) != 0
+        elif name == "number_of_times_called":
+            return lambda(args): len([x for x in self._messages if x == args])
+        else:
+            target_object = object.__getattribute__(self, "_obj")
+            self._messages.append(name)
+            return object.__getattribute__(target_object, name)
 
+    def __setattr__(self, name, value):
+        if name == "_messages":
+            object.__setattr__(self, "_messages", value)
+        else:
+            target_object = self._obj
+            self._messages.append(name)
+            object.__setattr__(target_object, name, value)
 
-# The proxy object should pass the following Koan:
-#
+    # The proxy object should pass the following Koan:
 class AboutProxyObjectProject(Koan):
     def test_proxy_method_returns_wrapped_object(self):
         # NOTE: The Television class is defined below
@@ -43,7 +75,6 @@ class AboutProxyObjectProject(Koan):
 
         tv.channel = 10
         tv.power()
-
         self.assertEqual(10, tv.channel)
         self.assertTrue(tv.is_on())
 

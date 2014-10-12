@@ -5,6 +5,7 @@ from runner.koan import *
 
 # You need to finish implementing triangle() in the file 'triangle.py'
 from triangle import *
+#from about_exceptions import *
 
 
 class AboutTriangleProject2(Koan):
